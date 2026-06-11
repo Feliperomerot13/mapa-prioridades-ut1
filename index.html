@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapa de Prioridades · UT1</title>
+  <meta name="description" content="Aplicación interactiva para construir el Mapa de Prioridades personal: OKR, actividades, impacto, esfuerzo, MoSCoW y plan de reenfoque." />
+  <style>
+    :root{
+      --navy:#11182b;
+      --navy-2:#18233d;
+      --navy-3:#23304f;
+      --cyan:#2ab9f3;
+      --cyan-2:#087fb6;
+      --paper:#f7f9ff;
+      --white:#ffffff;
+      --ink:#142033;
+      --muted:#68748c;
+      --muted-2:#aeb8d2;
+      --line:#d9e0f0;
+      --green:#138a55;
+      --green-bg:#e7f7ef;
+      --blue:#087fb6;
+      --blue-bg:#e6f5fe;
+      --yellow:#a76705;
+      --yellow-bg:#fff4d7;
+      --red:#b42318;
+      --red-bg:#ffe7e5;
+      --radius:18px;
+      --shadow:0 18px 50px rgba(4,10,24,.22);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top left, rgba(42,185,243,.22), transparent 32rem),
+        linear-gradient(160deg,var(--navy),#0b1020 70%);
+      color:var(--white);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    .app-shell{width:min(1120px,100%);margin:0 auto;padding:28px 18px 60px}
+    .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}
+    .brand-kicker{color:var(--cyan);font-size:13px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:7px}
+    h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(34px,6vw,66px);line-height:1;margin:0 0 8px;color:#fff}
+    .subtitle{color:var(--muted-2);font-weight:650;font-style:italic;font-size:clamp(15px,2.5vw,22px);margin:0}
+    .privacy-pill{display:inline-flex;align-items:center;gap:8px;color:#c7d2ee;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);border-radius:999px;padding:8px 12px;font-size:12px;white-space:nowrap}
+    .panel{background:var(--paper);color:var(--ink);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(255,255,255,.2)}
+    .progress-wrap{padding:18px 20px 0}
+    .progress-meta{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:13px;margin-bottom:8px}
+    .progress-track{height:8px;background:#e9eef9;border-radius:999px;overflow:hidden}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),#55d0ff);border-radius:999px;transition:width .25s ease}
+    .step-tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:12px}
+    .step-tab{font-size:11px;color:#77839a;background:#edf2fb;border-radius:999px;padding:7px 8px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .step-tab.active{background:var(--blue-bg);color:var(--blue);font-weight:800}
+    .content{padding:24px 20px 24px}
+    .section-head{display:flex;gap:13px;align-items:flex-start;margin-bottom:22px}
+    .icon-badge{width:42px;height:42px;border-radius:14px;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}
+    h2{font-size:clamp(22px,3vw,31px);line-height:1.12;margin:0 0 6px;color:var(--ink)}
+    .lead{margin:0;color:var(--muted);line-height:1.55;font-size:15px}
+    .grid{display:grid;gap:14px}
+    .grid.two{grid-template-columns:1fr 1fr}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+    .soft-card{background:#f0f5ff;border:1px solid #dbe7fb;border-radius:16px;padding:14px;color:#334059}
+    label,.label{display:block;font-weight:800;font-size:13px;margin-bottom:8px;color:#293650}
+    .hint{color:var(--muted);font-size:12px;line-height:1.45;margin-top:7px}
+    input,textarea,select{
+      width:100%;border:1.5px solid #cad5e8;border-radius:12px;background:#fff;color:var(--ink);padding:12px 13px;outline:none;transition:border .15s, box-shadow .15s;
+    }
+    textarea{min-height:78px;resize:vertical;line-height:1.45}
+    input:focus,textarea:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 4px rgba(42,185,243,.14)}
+    .button-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;align-items:center}
+    .btn{border:1px solid #cbd6e8;background:#fff;color:#1c2940;border-radius:13px;padding:11px 15px;font-weight:800;transition:transform .1s, background .15s, border .15s;display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none}
+    .btn:hover{transform:translateY(-1px);background:#f5f8ff}
+    .btn.primary{background:var(--cyan);border-color:var(--cyan);color:#061427}
+    .btn.primary:hover{background:#50caff}
+    .btn.danger{background:var(--red-bg);border-color:#ffd0cc;color:var(--red)}
+    .btn.ghost{background:transparent;color:var(--muted)}
+    .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip-btn{border:1px solid #cbd6e8;background:#fff;border-radius:999px;padding:8px 12px;color:#26344c;font-weight:750;font-size:13px}
+    .chip-btn.active{border-color:var(--cyan);background:var(--blue-bg);color:var(--blue)}
+    .activity-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:#f7f9ff;border:1px solid #e3eaf7;border-radius:14px;padding:10px 12px;margin-bottom:8px}
+    .num{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--blue-bg);color:var(--blue);font-weight:900;font-size:12px}
+    .activity-name{font-weight:750;color:#1f2c42;line-height:1.35}
+    .counter{font-size:12px;color:var(--muted);margin-left:auto}
+    .counter.warn{color:var(--yellow);font-weight:800}
+    .option-group{display:flex;gap:7px;flex-wrap:wrap}
+    .option{border:1.5px solid #d1daea;background:#fff;color:#46546d;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px}
+    .option.selected{border-width:2px}
+    .option.impact-alto.selected,.pill.impact-alto{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+    .option.impact-medio.selected,.pill.impact-medio{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow)}
+    .option.impact-bajo.selected,.pill.impact-bajo{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+    .option.effort-bajo.selected,.pill.effort-bajo{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+    .option.effort-medio.selected,.pill.effort-medio{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow)}
+    .option.effort-alto.selected,.pill.effort-alto{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+    .pill{display:inline-flex;border:1px solid #d3ddeb;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:850;line-height:1}
+    .moscow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .moscow-help{display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+    .dot{width:10px;height:10px;border-radius:999px;flex:0 0 auto;margin-top:4px}
+    .m{--mcolor:var(--green);--mbg:var(--green-bg)} .s{--mcolor:var(--blue);--mbg:var(--blue-bg)} .c{--mcolor:var(--yellow);--mbg:var(--yellow-bg)} .w{--mcolor:var(--red);--mbg:var(--red-bg)}
+    .moscow-option.selected{background:var(--mbg);border-color:var(--mcolor);color:var(--mcolor)}
+    .warning{background:var(--yellow-bg);border:1px solid #f5d18b;color:#7a4b05;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.45;margin:12px 0}
+    .success-note{background:var(--green-bg);border:1px solid #b8e8d0;color:#0d6840;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.45;margin:12px 0}
+    .map-canvas{background:#fff;color:var(--ink);border-radius:22px;border:1px solid var(--line);padding:20px;margin-bottom:16px}
+    .map-header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;border-bottom:2px solid #e6edf9;padding-bottom:14px;margin-bottom:16px}
+    .avatar{width:52px;height:52px;border-radius:17px;background:var(--navy);color:var(--cyan);display:flex;align-items:center;justify-content:center;font-weight:950;font-size:18px;flex:0 0 auto}
+    .okr-box{background:linear-gradient(135deg,#f3f9ff,#ffffff);border:2px solid #cbeeff;border-radius:18px;padding:16px;margin-bottom:16px}
+    .kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:950;color:var(--blue);margin-bottom:8px}
+    .kr{display:grid;grid-template-columns:auto 1fr;gap:8px;margin-top:8px;align-items:flex-start;color:#4c5a73;font-size:13px;line-height:1.45}
+    .mobile-scroll-note{display:none;background:#edf7ff;border:1px solid #bfeaff;color:#075f8a;border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.35;margin:8px 0 10px;font-weight:750}
+    .matrix-wrap{overflow-x:auto;padding-bottom:3px;scrollbar-width:thin}
+    .matrix{min-width:710px;display:grid;grid-template-columns:86px repeat(3,1fr);gap:7px;align-items:stretch}
+    .axis-label{display:flex;align-items:center;justify-content:center;text-align:center;color:#58667f;font-size:12px;font-weight:950;background:#f2f6fd;border-radius:12px;padding:8px}
+    .cell{border:1px solid #e0e7f3;border-radius:14px;min-height:112px;padding:10px;background:#fafcff}
+    .cell-title{font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+    .cell.success{background:#f0fbf6}.cell.success .cell-title{color:var(--green)}
+    .cell.info{background:#eef8ff}.cell.info .cell-title{color:var(--blue)}
+    .cell.secondary{background:#f8f9fc}.cell.secondary .cell-title{color:#59667e}
+    .cell.warning{background:#fff8e8}.cell.warning .cell-title{color:var(--yellow)}
+    .cell.danger{background:#fff0ef}.cell.danger .cell-title{color:var(--red)}
+    .task-token{display:flex;gap:6px;align-items:flex-start;background:#fff;border:1px solid rgba(20,32,51,.08);border-radius:10px;padding:7px 8px;margin-bottom:6px;box-shadow:0 4px 12px rgba(19,35,64,.04)}
+    .task-token small{font-weight:950;min-width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;background:var(--mbg);color:var(--mcolor)}
+    .task-token span{font-size:12px;line-height:1.32;color:#1d2a40;font-weight:700}
+    .moscow-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+    .moscow-card{border:1px solid #dde6f4;background:#fff;border-radius:15px;padding:13px}
+    .moscow-card h3{margin:0 0 9px;font-size:14px;color:var(--mcolor);display:flex;align-items:center;gap:7px}
+    .moscow-item{font-size:12px;color:#26344c;line-height:1.35;border-left:3px solid var(--mcolor);padding-left:8px;margin-bottom:7px;font-weight:700}
+    .empty{font-size:12px;color:#8994a9;font-style:italic}
+    .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    .plan-card{border:1px solid #dde6f4;background:#fff;border-radius:16px;padding:14px}
+    .plan-card h3{font-size:14px;margin:0 0 10px;line-height:1.25}
+    .plan-text{font-size:13px;line-height:1.45;color:#39475f;white-space:pre-wrap}
+    .footer-actions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-top:16px}
+    .capture-tip{color:#d8e5ff;font-size:13px;line-height:1.5;margin:12px 4px 0}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .hidden{display:none!important}
+    @media (max-width:760px){
+      body{-webkit-text-size-adjust:100%}
+      .app-shell{padding:18px 12px 42px}
+      .topbar{display:block}.privacy-pill{margin-top:14px;white-space:normal;line-height:1.35}
+      .content{padding:18px 14px 20px}.progress-wrap{padding:16px 14px 0}
+      .step-tabs{grid-template-columns:repeat(2,1fr)}
+      .step-tab{font-size:10.5px;padding:7px 6px}
+      .grid.two,.moscow-grid,.moscow-summary,.plan-grid{grid-template-columns:1fr}
+      .section-head{gap:10px;margin-bottom:18px}.icon-badge{width:38px;height:38px}
+      .button-row{gap:9px}.button-row .btn{width:100%}
+      .btn,.chip-btn,.option{min-height:44px;padding:10px 14px}
+      .option-group{gap:8px}
+      .option-group .option:not(.moscow-option){flex:1 1 30%;min-width:92px;text-align:center}
+      .moscow-option{width:100%;justify-content:center;text-align:center}
+      input,textarea,select{font-size:16px;padding:12px 13px}
+      .activity-row{grid-template-columns:auto 1fr auto;gap:8px;padding:10px}
+      .activity-row input{min-width:0}
+      .activity-row .btn.danger{min-width:44px;width:44px;padding:8px}
+      .map-header{display:block}.avatar{margin-bottom:10px}
+      .map-canvas{padding:16px 12px;border-radius:18px}
+      .mobile-scroll-note{display:flex;align-items:flex-start;gap:8px}
+      .matrix-wrap{border:1px solid #e1e9f6;border-radius:16px;background:#f8fbff;padding:8px;margin:0 -4px 2px;-webkit-overflow-scrolling:touch;box-shadow:inset -18px 0 20px -22px rgba(20,32,51,.65)}
+      .matrix{min-width:620px;gap:6px}
+      .axis-label{font-size:11px;padding:7px}
+      .cell{min-height:104px;padding:8px;border-radius:12px}
+      .task-token{padding:6px 7px;border-radius:9px}
+      .task-token span{font-size:11.5px}
+      .moscow-card,.plan-card{padding:12px}
+      .footer-actions .button-row{width:100%}
+      .footer-actions .btn{width:100%}
+      .capture-tip{font-size:12.5px;margin:10px 0 0}
+      h1{font-size:36px;line-height:1.04}
+      h2{font-size:24px}
+    }
+    @media (max-width:420px){
+      .app-shell{padding:14px 10px 36px}
+      .brand-kicker{font-size:11px}.subtitle{font-size:14px}
+      .progress-meta{font-size:12px}.step-tabs{display:none}
+      .content{padding:16px 12px 18px}.progress-wrap{padding:14px 12px 0}
+      .card,.soft-card{padding:13px;border-radius:14px}
+      .chips{gap:7px}.chip-btn{width:100%;justify-content:center}
+      .activity-row{grid-template-columns:28px 1fr 44px}
+      .matrix{min-width:560px;grid-template-columns:70px repeat(3,1fr)}
+      .cell-title{font-size:10px}.empty{font-size:11px}
+      h1{font-size:32px}
+    }
+    @media print{
+      @page{size:A4 landscape;margin:10mm}
+      *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      html,body{background:white!important;color:#111;width:100%}
+      .app-shell{width:100%;max-width:none;padding:0}
+      .topbar,.progress-wrap,.nav-actions,.footer-actions,.capture-tip{display:none!important}
+      .panel{box-shadow:none;border:none;border-radius:0;overflow:visible}
+      .content{padding:0}
+      .map-canvas{border:none;padding:0;margin:0;border-radius:0}
+      .plan-card,.moscow-card,.okr-box,.cell,.task-token{break-inside:avoid;page-break-inside:avoid}
+      .matrix-wrap{overflow:visible}
+      .matrix{min-width:0;grid-template-columns:72px repeat(3,1fr);gap:5px}
+      .cell{min-height:90px;padding:8px}
+      .moscow-summary,.plan-grid{gap:8px}
+      textarea,select,input{border:1px solid #cbd6e8}
+    }
+    body.capture-mode{background:#fff}
+    body.capture-mode .topbar,body.capture-mode .progress-wrap,body.capture-mode .nav-actions,body.capture-mode .footer-actions,body.capture-mode .capture-tip{display:none!important}
+    body.capture-mode .app-shell{padding:0;width:min(1050px,100%)}
+    body.capture-mode .panel{border:none;box-shadow:none;border-radius:0}
+    body.capture-mode .content{padding:0}
+    body.capture-mode .map-canvas{border:none;border-radius:0;margin:0}
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="brand-kicker">UT1 · Priorización ágil</div>
+        <h1>Mapa de Prioridades</h1>
+        <p class="subtitle">Individual · 30 min · evidencia de apropiación</p>
+      </div>
+      <div class="privacy-pill" title="La información queda guardada únicamente en este navegador.">🔒 Datos locales · no se envía información</div>
+    </header>
+
+    <section class="panel" aria-live="polite">
+      <div id="progress" class="progress-wrap"></div>
+      <div id="app" class="content"></div>
+    </section>
+    <p id="captureTip" class="capture-tip hidden">Modo captura activo: toma captura de pantalla. Presiona Esc para volver al modo edición.</p>
+  </main>
+
+  <script>
+  (()=>{
+    'use strict';
+    const STORAGE_KEY='mapa-prioridades-ut1-v3';
+    const MIN_ACTIVITIES=8;
+    const MAX_ACTIVITIES=10;
+    const steps=['Nombre','OKR','Actividades','Impacto y esfuerzo','MoSCoW','Mapa final'];
+    const impacts=['Alto','Medio','Bajo'];
+    const efforts=['Bajo','Medio','Alto'];
+    const moscow={
+      M:{label:'Must have',desc:'Sin esto, el objetivo fracasa.',cls:'m'},
+      S:{label:'Should have',desc:'Importante; el objetivo sobrevive sin ello este ciclo.',cls:'s'},
+      C:{label:'Could have',desc:'Deseable si hay capacidad disponible.',cls:'c'},
+      W:{label:"Won't have",desc:'Explícitamente NO este periodo. Se comunica, no se omite.',cls:'w'}
+    };
+    const qmeta={
+      'Alto-Bajo':{label:'Hacer ya',cls:'success'},
+      'Alto-Medio':{label:'Agendar',cls:'info'},
+      'Alto-Alto':{label:'Planear',cls:'info'},
+      'Medio-Bajo':{label:'Mantener',cls:'secondary'},
+      'Medio-Medio':{label:'Evaluar',cls:'secondary'},
+      'Medio-Alto':{label:'Delegar',cls:'warning'},
+      'Bajo-Bajo':{label:'Reducir',cls:'warning'},
+      'Bajo-Medio':{label:'Renegociar',cls:'danger'},
+      'Bajo-Alto':{label:'Eliminar',cls:'danger'}
+    };
+    const examples=[
+      'Elaborar reportes de gestión',
+      'Asistir a comités de seguimiento',
+      'Responder correos o chats urgentes',
+      'Atender solicitudes recurrentes de usuarios',
+      'Preparar presentaciones para gerencia',
+      'Coordinar con proveedores o áreas internas',
+      'Actualizar bases, archivos o tableros',
+      'Dar seguimiento a casos pendientes',
+      'Resolver excepciones o casos especiales',
+      'Revisar procesos y documentar mejoras'
+    ];
+    let state=load() || {
+      step:1,
+      user:{name:'',area:''},
+      okr:{objective:'',kr1:'',kr2:''},
+      activities:[],
+      plan:{moreActivity:'',moreText:'',reduceActivity:'',reduceText:'',wontActivity:'',wontText:''}
+    };
+
+    const app=document.getElementById('app');
+    const progress=document.getElementById('progress');
+    const captureTip=document.getElementById('captureTip');
+
+    function uid(){return Math.random().toString(36).slice(2,9)}
+    function esc(s){return String(s ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+    function attr(s){return esc(s).replace(/`/g,'&#96;')}
+    function normalize(v){return String(v||'').trim()}
+    function areaValue(){return state.user.area==='Otra área' ? normalize(state.user.otherArea) || 'Otra área' : state.user.area}
+    function initials(name){return normalize(name).split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()).join('') || 'MP'}
+    function load(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))}catch{return null}}
+    function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+    function setState(patch){state=typeof patch==='function'?patch(state):{...state,...patch};save();render()}
+    function go(step){state.step=Math.max(1,Math.min(6,step));save();render();window.scrollTo({top:0,behavior:'smooth'})}
+    function sectionHead(icon,title,lead){return `<div class="section-head"><div class="icon-badge">${icon}</div><div><h2>${title}</h2><p class="lead">${lead}</p></div></div>`}
+    function btn(label,cls='',attrs=''){return `<button class="btn ${cls}" ${attrs}>${label}</button>`}
+    function renderProgress(){
+      const pct=(state.step/steps.length)*100;
+      progress.innerHTML=`
+        <div class="progress-meta"><span>Paso ${state.step} de ${steps.length}</span><strong>${steps[state.step-1]}</strong></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="step-tabs">${steps.map((s,i)=>`<div class="step-tab ${i+1===state.step?'active':''}">${i+1}. ${s}</div>`).join('')}</div>
+      `;
+    }
+    function render(){
+      renderProgress();
+      document.body.classList.remove('capture-mode');
+      captureTip.classList.add('hidden');
+      if(state.step===1) renderStep1();
+      if(state.step===2) renderStep2();
+      if(state.step===3) renderStep3();
+      if(state.step===4) renderStep4();
+      if(state.step===5) renderStep5();
+      if(state.step===6) renderFinal();
+    }
+
+    function renderStep1(){
+      app.innerHTML=`
+        ${sectionHead('👤','Datos iniciales','Registra tu nombre y área. Al final el mapa quedará listo para captura de pantalla o impresión.')}
+        <div class="grid two">
+          <div class="card">
+            <label for="name">Nombre completo</label>
+            <input id="name" value="${attr(state.user.name)}" placeholder="Ej: Felipe Romero" autocomplete="name" />
+          </div>
+          <div class="card">
+            <label>Área de trabajo</label>
+            <div class="chips" id="areaChips">
+              ${['Formación / U. Corporativa','Vivienda','Eventos','Servicios al Afiliado','Otra área'].map(a=>`<button class="chip-btn ${state.user.area===a?'active':''}" data-area="${attr(a)}">${esc(a)}</button>`).join('')}
+            </div>
+            <div id="otherAreaWrap" class="${state.user.area==='Otra área'?'':'hidden'}" style="margin-top:10px">
+              <input id="otherArea" value="${attr(state.user.otherArea||'')}" placeholder="Escribe el área" />
+            </div>
+          </div>
+        </div>
+        <div class="soft-card" style="margin-top:14px"><strong>Cómo se usará:</strong> primero declaras tu OKR, luego trasladas 8 a 10 actividades, calificas impacto y esfuerzo, clasificas con MoSCoW y cierras con un plan de reenfoque a 2 semanas.</div>
+        <div class="button-row nav-actions">${btn('Empezar →','primary','id="next"')}</div>
+      `;
+      app.querySelector('#name').addEventListener('input',e=>{state.user.name=e.target.value;save();validateStep1()});
+      app.querySelectorAll('[data-area]').forEach(b=>b.addEventListener('click',()=>{state.user.area=b.dataset.area;save();renderStep1()}));
+      const other=app.querySelector('#otherArea'); if(other) other.addEventListener('input',e=>{state.user.otherArea=e.target.value;save();validateStep1()});
+      app.querySelector('#next').addEventListener('click',()=>go(2));
+      validateStep1();
+    }
+    function validateStep1(){
+      const valid=normalize(state.user.name) && (state.user.area && (state.user.area!=='Otra área' || normalize(state.user.otherArea)));
+      const n=app.querySelector('#next'); if(n) n.disabled=!valid;
+    }
+
+    function renderStep2(){
+      app.innerHTML=`
+        ${sectionHead('🎯','Tu OKR del trimestre','Define la brújula. Si el OKR queda ambiguo, el valor de las actividades se vuelve opinión.')}
+        <div class="grid">
+          <div class="card">
+            <label for="objective">Objetivo — ¿qué quiero lograr este trimestre?</label>
+            <textarea id="objective" placeholder="Ej: Reducir fricciones en el proceso de inscripción y mejorar la experiencia del afiliado.">${esc(state.okr.objective)}</textarea>
+            <div class="hint">Debe ser claro, relevante y accionable. No tiene que tener número; los números van en los resultados clave.</div>
+          </div>
+          <div class="grid two">
+            <div class="card">
+              <label for="kr1">Resultado clave 1 — ¿cómo sabré que avancé?</label>
+              <input id="kr1" value="${attr(state.okr.kr1)}" placeholder="Ej: Reducir quejas recurrentes de 40 a 20 al mes" />
+              <div class="hint">Formato recomendado: pasar de ___ a ___ antes de ___.</div>
+            </div>
+            <div class="card">
+              <label for="kr2">Resultado clave 2 — opcional</label>
+              <input id="kr2" value="${attr(state.okr.kr2)}" placeholder="Ej: Liberar 10% de capacidad operativa del equipo" />
+            </div>
+          </div>
+        </div>
+        <div class="button-row nav-actions">${btn('← Atrás','','id="back"')} ${btn('Continuar →','primary','id="next"')}</div>
+      `;
+      ['objective','kr1','kr2'].forEach(id=>app.querySelector('#'+id).addEventListener('input',e=>{state.okr[id==='objective'?'objective':id]=e.target.value;save();validateStep2()}));
+      app.querySelector('#back').addEventListener('click',()=>go(1));
+      app.querySelector('#next').addEventListener('click',()=>go(3));
+      validateStep2();
+    }
+    function validateStep2(){const valid=normalize(state.okr.objective)&&normalize(state.okr.kr1);const n=app.querySelector('#next'); if(n)n.disabled=!valid;}
+
+    function renderStep3(){
+      const remaining=MAX_ACTIVITIES-state.activities.length;
+      app.innerHTML=`
+        ${sectionHead('🧩','Traslada tus actividades','Registra 8 a 10 actividades reales de tus últimas dos semanas. No escribas aspiraciones; escribe trabajo que realmente consume tiempo.')}
+        <div class="card">
+          <label for="activityInput">Agregar actividad</label>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:10px">
+            <input id="activityInput" placeholder="Ej: Preparar reporte semanal de indicadores" ${remaining<=0?'disabled':''}/>
+            ${btn('Agregar','',`id="addActivity" ${remaining<=0?'disabled':''}`)}
+          </div>
+          <div class="hint"><strong>${state.activities.length}/${MAX_ACTIVITIES}</strong> actividades. Mínimo requerido: ${MIN_ACTIVITIES}. ${remaining>0?`Puedes agregar ${remaining} más.`:'Máximo alcanzado.'}</div>
+        </div>
+        ${state.activities.length===0?`
+          <div class="card">
+            <span class="label">Ejemplos para activar memoria</span>
+            <div class="chips">${examples.map(x=>`<button class="chip-btn" data-example="${attr(x)}">${esc(x)}</button>`).join('')}</div>
+          </div>
+        `:''}
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="label" style="margin:0">Tus actividades</span><span class="counter ${state.activities.length<MIN_ACTIVITIES?'warn':''}">${state.activities.length<MIN_ACTIVITIES?`Faltan ${MIN_ACTIVITIES-state.activities.length}`:'Listo'}</span></div>
+          ${state.activities.length?state.activities.map((a,i)=>`
+            <div class="activity-row">
+              <span class="num">${i+1}</span>
+              <input data-edit="${a.id}" value="${attr(a.name)}" aria-label="Editar actividad ${i+1}" />
+              <button class="btn danger" data-del="${a.id}" title="Eliminar" style="padding:10px 12px">×</button>
+            </div>
+          `).join(''):'<div class="empty">Aún no has agregado actividades.</div>'}
+        </div>
+        <div class="button-row nav-actions">${btn('← Atrás','','id="back"')} ${btn('Calificar impacto y esfuerzo →','primary','id="next"')}</div>
+      `;
+      const input=app.querySelector('#activityInput');
+      const add=()=>{const v=normalize(input.value); if(!v || state.activities.length>=MAX_ACTIVITIES) return; state.activities.push({id:uid(),name:v,impact:'',effort:'',moscow:''}); input.value=''; save();renderStep3();};
+      if(input){input.addEventListener('keydown',e=>{if(e.key==='Enter')add()});}
+      app.querySelector('#addActivity')?.addEventListener('click',add);
+      app.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click',()=>{if(state.activities.length<MAX_ACTIVITIES){state.activities.push({id:uid(),name:b.dataset.example,impact:'',effort:'',moscow:''});save();renderStep3();}}));
+      app.querySelectorAll('[data-edit]').forEach(inp=>inp.addEventListener('input',e=>{const a=state.activities.find(x=>x.id===inp.dataset.edit); if(a){a.name=e.target.value;save();}}));
+      app.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{state.activities=state.activities.filter(x=>x.id!==b.dataset.del);save();renderStep3();}));
+      app.querySelector('#back').addEventListener('click',()=>go(2));
+      app.querySelector('#next').addEventListener('click',()=>go(4));
+      app.querySelector('#next').disabled=state.activities.length<MIN_ACTIVITIES || state.activities.some(a=>!normalize(a.name));
+    }
+
+    function renderStep4(){
+      app.innerHTML=`
+        ${sectionHead('📊','Califica impacto y esfuerzo','Evalúa cada actividad frente a tu OKR. Impacto no es urgencia; impacto es contribución verificable al objetivo. Esfuerzo no es solo tiempo: también incluye energía, coordinación, interrupciones y dependencia de otros.')}
+        <div class="soft-card" style="margin-bottom:10px"><strong>Test rápido de impacto:</strong> ¿mueve un resultado clave?, ¿reduce fricción/reprocesos/quejas?, ¿si se elimina se afecta el objetivo? Si respondes “sí” a varias, el impacto probablemente es alto.</div>
+        <div class="soft-card" style="margin-bottom:14px"><strong>Test rápido de esfuerzo:</strong> ¿cuántas horas consume a la semana?, ¿requiere coordinación o espera de otras áreas?, ¿interrumpe trabajo profundo?, ¿genera reprocesos o seguimiento constante? <br><br><strong>Guía:</strong> Bajo = poco tiempo y poca coordinación. Medio = requiere seguimiento o bloques recurrentes. Alto = consume varias horas, fragmenta la agenda o depende de muchas personas.</div>
+        <div class="grid">
+          ${state.activities.map((a,i)=>`
+            <div class="card">
+              <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:14px"><span class="num">${i+1}</span><div class="activity-name">${esc(a.name)}</div></div>
+              <div class="grid two">
+                <div>
+                  <span class="label">Impacto frente al OKR</span>
+                  <div class="option-group">${impacts.map(v=>`<button class="option impact-${v.toLowerCase()} ${a.impact===v?'selected':''}" data-impact="${v}" data-id="${a.id}">${v}</button>`).join('')}</div>
+                </div>
+                <div>
+                  <span class="label">Esfuerzo semanal</span>
+                  <div class="option-group">${efforts.map(v=>`<button class="option effort-${v.toLowerCase()} ${a.effort===v?'selected':''}" data-effort="${v}" data-id="${a.id}">${v}</button>`).join('')}</div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="button-row nav-actions">${btn('← Atrás','','id="back"')} ${btn('Clasificar con MoSCoW →','primary','id="next"')}</div>
+      `;
+      app.querySelectorAll('[data-impact]').forEach(b=>b.addEventListener('click',()=>{const a=state.activities.find(x=>x.id===b.dataset.id);a.impact=b.dataset.impact;save();renderStep4();}));
+      app.querySelectorAll('[data-effort]').forEach(b=>b.addEventListener('click',()=>{const a=state.activities.find(x=>x.id===b.dataset.id);a.effort=b.dataset.effort;save();renderStep4();}));
+      app.querySelector('#back').addEventListener('click',()=>go(3));
+      app.querySelector('#next').addEventListener('click',()=>go(5));
+      app.querySelector('#next').disabled=!state.activities.every(a=>a.impact&&a.effort);
+    }
+
+    function renderStep5(){
+      const done=state.activities.every(a=>a.moscow);
+      const hasW=state.activities.some(a=>a.moscow==='W');
+      app.innerHTML=`
+        ${sectionHead('🧭','Clasifica con MoSCoW','Asigna una letra a cada actividad. Regla central: mínimo una debe ser Won’t. Si no renuncias a nada, no priorizaste.')}
+        <div class="moscow-grid" style="margin-bottom:14px">
+          ${Object.entries(moscow).map(([k,v])=>`<div class="moscow-help ${v.cls}"><span class="dot" style="background:var(--mcolor)"></span><div><strong style="color:var(--mcolor)">${k} · ${v.label}</strong><div class="hint" style="margin:3px 0 0">${v.desc}</div></div></div>`).join('')}
+        </div>
+        <div class="grid">
+          ${state.activities.map((a,i)=>`
+            <div class="card">
+              <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">
+                <span class="num">${i+1}</span>
+                <div style="flex:1">
+                  <div class="activity-name">${esc(a.name)}</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><span class="pill impact-${a.impact.toLowerCase()}">Impacto ${a.impact}</span><span class="pill effort-${a.effort.toLowerCase()}">Esfuerzo ${a.effort}</span></div>
+                </div>
+              </div>
+              <div class="option-group">${Object.entries(moscow).map(([k,v])=>`<button class="option moscow-option ${v.cls} ${a.moscow===k?'selected':''}" data-moscow="${k}" data-id="${a.id}">${k} · ${v.label}</button>`).join('')}</div>
+            </div>
+          `).join('')}
+        </div>
+        ${done&&!hasW?'<div class="warning"><strong>Falta tu Won’t:</strong> debes marcar al menos una actividad como “Won’t have”. Priorizar exige una renuncia explícita.</div>':''}
+        ${done&&hasW?'<div class="success-note"><strong>Listo:</strong> ya tienes al menos una renuncia explícita. Ahora genera tu mapa final.</div>':''}
+        <div class="button-row nav-actions">${btn('← Atrás','','id="back"')} ${btn('Ver mi mapa final →','primary','id="next"')}</div>
+      `;
+      app.querySelectorAll('[data-moscow]').forEach(b=>b.addEventListener('click',()=>{const a=state.activities.find(x=>x.id===b.dataset.id);a.moscow=b.dataset.moscow;save();renderStep5();}));
+      app.querySelector('#back').addEventListener('click',()=>go(4));
+      app.querySelector('#next').addEventListener('click',()=>go(6));
+      app.querySelector('#next').disabled=!(done&&hasW);
+    }
+
+    function selectOptions(selected){return `<option value="">Selecciona una actividad</option>${state.activities.map(a=>`<option value="${attr(a.id)}" ${selected===a.id?'selected':''}>${esc(a.name)}</option>`).join('')}`}
+    function activityById(id){return state.activities.find(a=>a.id===id)?.name || ''}
+    function renderFinal(){
+      app.innerHTML=`
+        ${sectionHead('🗺️','Tu Mapa de Prioridades','Completa el plan de reenfoque a dos semanas. Después toma captura, imprime o copia el resumen.')}
+        <div class="map-canvas" id="captureArea">
+          ${renderMapCanvas()}
+        </div>
+        <div class="card nav-actions">
+          <span class="label">Plan de reenfoque · próximas 2 semanas</span>
+          <div class="plan-grid">
+            <div>
+              <label for="moreActivity" style="color:var(--green)">1. Daré MÁS espacio a...</label>
+              <select id="moreActivity">${selectOptions(state.plan.moreActivity)}</select>
+              <textarea id="moreText" placeholder="¿Qué bloqueas en agenda? ¿Qué dejas de mover?" style="margin-top:8px">${esc(state.plan.moreText)}</textarea>
+            </div>
+            <div>
+              <label for="reduceActivity" style="color:var(--yellow)">2. Voy a reducir o renegociar...</label>
+              <select id="reduceActivity">${selectOptions(state.plan.reduceActivity)}</select>
+              <textarea id="reduceText" placeholder="¿Con quién hablas? ¿Qué le dices?" style="margin-top:8px">${esc(state.plan.reduceText)}</textarea>
+            </div>
+            <div>
+              <label for="wontActivity" style="color:var(--red)">3. Abandono, automatizo o delego...</label>
+              <select id="wontActivity">${selectOptions(state.plan.wontActivity)}</select>
+              <textarea id="wontText" placeholder="¿Qué se deja de hacer? ¿Cómo lo comunicas?" style="margin-top:8px">${esc(state.plan.wontText)}</textarea>
+            </div>
+          </div>
+          <div class="hint">Al escribir el plan, el mapa de arriba se actualiza y queda listo para captura.</div>
+          <div class="hint"><strong>PDF:</strong> usa el botón “Imprimir / guardar PDF” y, en el cuadro de impresión, selecciona “Guardar como PDF”. El diseño está optimizado para A4 horizontal.</div>
+          <div class="hint"><strong>Celular:</strong> para la evidencia del taller, lo más rápido es usar “Modo captura” y tomar pantallazo. Si eliges PDF desde iPhone o Android, activa orientación horizontal cuando el sistema lo permita.</div>
+        </div>
+        <div class="footer-actions nav-actions">
+          <div class="button-row" style="margin:0">${btn('← Editar MoSCoW','','id="back"')} ${btn('Reiniciar','danger','id="reset"')}</div>
+          <div class="button-row" style="margin:0">${btn('Copiar resumen','','id="copy"')} ${btn('Imprimir / guardar PDF','','id="print"')} ${btn('Modo captura / pantallazo','primary','id="capture"')}</div>
+        </div>
+      `;
+      ['moreActivity','reduceActivity','wontActivity'].forEach(id=>app.querySelector('#'+id).addEventListener('change',e=>{state.plan[id]=e.target.value;save();renderFinal();}));
+      ['moreText','reduceText','wontText'].forEach(id=>app.querySelector('#'+id).addEventListener('input',e=>{state.plan[id]=e.target.value;save();document.getElementById('captureArea').innerHTML=renderMapCanvas();}));
+      app.querySelector('#back').addEventListener('click',()=>go(5));
+      app.querySelector('#print').addEventListener('click',()=>window.print());
+      app.querySelector('#copy').addEventListener('click',copySummary);
+      app.querySelector('#capture').addEventListener('click',()=>{document.body.classList.add('capture-mode');captureTip.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});});
+      app.querySelector('#reset').addEventListener('click',()=>{if(confirm('¿Seguro que quieres borrar este mapa y empezar de nuevo?')){localStorage.removeItem(STORAGE_KEY);state={step:1,user:{name:'',area:''},okr:{objective:'',kr1:'',kr2:''},activities:[],plan:{moreActivity:'',moreText:'',reduceActivity:'',wontActivity:'',wontText:''}};render();}});
+    }
+
+    function renderMapCanvas(){
+      const grouped={M:[],S:[],C:[],W:[]};
+      const quad={}; impacts.forEach(i=>efforts.forEach(e=>quad[`${i}-${e}`]=[]));
+      state.activities.forEach(a=>{if(grouped[a.moscow]) grouped[a.moscow].push(a); if(quad[`${a.impact}-${a.effort}`]) quad[`${a.impact}-${a.effort}`].push(a);});
+      const today=new Date().toLocaleDateString('es-CO',{year:'numeric',month:'short',day:'numeric'});
+      return `
+        <div class="map-header">
+          <div style="display:flex;gap:12px;align-items:center"><div class="avatar">${esc(initials(state.user.name))}</div><div><h2 style="margin:0 0 4px">Mapa de Prioridades</h2><div style="color:#5f6c84;font-size:13px"><strong>${esc(state.user.name)}</strong> · ${esc(areaValue())}</div></div></div>
+          <div style="font-size:12px;color:#75829a;text-align:right"><strong>UT1 · Priorización ágil</strong><br>${esc(today)}</div>
+        </div>
+        <div class="okr-box">
+          <div class="kicker">OKR del trimestre</div>
+          <div style="font-size:17px;font-weight:900;line-height:1.35;color:#132035">${esc(state.okr.objective)}</div>
+          <div class="kr"><span class="pill impact-alto">KR1</span><span>${esc(state.okr.kr1)}</span></div>
+          ${normalize(state.okr.kr2)?`<div class="kr"><span class="pill impact-alto">KR2</span><span>${esc(state.okr.kr2)}</span></div>`:''}
+        </div>
+        <div class="kicker">Mapa impacto × esfuerzo</div>
+        <div class="mobile-scroll-note"><span aria-hidden="true">↔️</span><span><strong>En celular:</strong> desliza esta matriz hacia los lados para ver todos los cuadrantes. Para entregar evidencia, la captura de pantalla suele ser más práctica que el PDF en móvil.</span></div>
+        <div class="matrix-wrap">
+          <div class="matrix">
+            <div></div>${efforts.map(e=>`<div class="axis-label">Esfuerzo ${e}</div>`).join('')}
+            ${impacts.map(i=>`
+              <div class="axis-label">Impacto ${i}</div>
+              ${efforts.map(e=>{
+                const key=`${i}-${e}`; const meta=qmeta[key];
+                return `<div class="cell ${meta.cls}"><div class="cell-title">${meta.label}</div>${quad[key].map(a=>taskToken(a)).join('') || '<div class="empty">Sin actividades</div>'}</div>`
+              }).join('')}
+            `).join('')}
+          </div>
+        </div>
+        <div class="moscow-summary">
+          ${Object.entries(moscow).map(([k,v])=>`<div class="moscow-card ${v.cls}"><h3><span class="dot" style="background:var(--mcolor)"></span>${k} · ${v.label}</h3>${grouped[k].length?grouped[k].map(a=>`<div class="moscow-item">${esc(a.name)}</div>`).join(''):'<div class="empty">Ninguna</div>'}</div>`).join('')}
+        </div>
+        <div style="margin-top:18px" class="kicker">Plan de reenfoque · próximas 2 semanas</div>
+        <div class="plan-grid">
+          ${planBox('Más espacio', 'green', activityById(state.plan.moreActivity), state.plan.moreText)}
+          ${planBox('Reducir / renegociar', 'yellow', activityById(state.plan.reduceActivity), state.plan.reduceText)}
+          ${planBox('Abandonar / automatizar / delegar', 'red', activityById(state.plan.wontActivity), state.plan.wontText)}
+        </div>
+      `;
+    }
+    function taskToken(a){
+      const v=moscow[a.moscow];
+      return `<div class="task-token ${v.cls}"><small>${esc(a.moscow)}</small><span>${esc(a.name)}</span></div>`;
+    }
+    function planBox(title,color,activity,text){
+      const colorMap={green:'var(--green)',yellow:'var(--yellow)',red:'var(--red)'};
+      return `<div class="plan-card"><h3 style="color:${colorMap[color]}">${esc(title)}</h3><div class="plan-text"><strong>${activity?esc(activity):'Actividad pendiente por seleccionar'}</strong>${normalize(text)?`<br>${esc(text)}`:''}</div></div>`;
+    }
+    function summaryText(){
+      const byMos=(k)=>state.activities.filter(a=>a.moscow===k).map(a=>`- ${a.name}`).join('\n') || '- Ninguna';
+      return `Mapa de Prioridades · UT1\n\nNombre: ${state.user.name}\nÁrea: ${areaValue()}\n\nOKR:\n${state.okr.objective}\nKR1: ${state.okr.kr1}${state.okr.kr2?`\nKR2: ${state.okr.kr2}`:''}\n\nMust have:\n${byMos('M')}\n\nShould have:\n${byMos('S')}\n\nCould have:\n${byMos('C')}\n\nWon't have:\n${byMos('W')}\n\nPlan 2 semanas:\n1. Más espacio: ${activityById(state.plan.moreActivity)} — ${state.plan.moreText}\n2. Reducir/renegociar: ${activityById(state.plan.reduceActivity)} — ${state.plan.reduceText}\n3. Abandonar/automatizar/delegar: ${activityById(state.plan.wontActivity)} — ${state.plan.wontText}`;
+    }
+    async function copySummary(){
+      try{await navigator.clipboard.writeText(summaryText());alert('Resumen copiado al portapapeles.')}catch{prompt('Copia el resumen:',summaryText())}
+    }
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('capture-mode')){document.body.classList.remove('capture-mode');captureTip.classList.add('hidden');}});
+    render();
+  })();
+  </script>
+</body>
+</html>
